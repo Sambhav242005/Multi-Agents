@@ -25,30 +25,32 @@ export default function WorkspacePage() {
   const [apiKeyInput, setApiKeyInput] = useState("")
   const [showApiKey, setShowApiKey] = useState(false)
 
+  const normalizeApiKey = (value: string) => value.trim()
+
   useEffect(() => {
     console.log("WorkspacePage mounted, fetching projects...")
     fetchProjects()
   }, [])
 
   useEffect(() => {
-    const storedKey = localStorage.getItem("user_api_key")
+    const storedKey = sessionStorage.getItem("user_api_key")
     if (storedKey) {
-      const trimmedKey = storedKey.trim()
-      if (trimmedKey) {
-        setApiKey(trimmedKey)
-        setApiKeyInput(trimmedKey)
+      const normalizedKey = normalizeApiKey(storedKey)
+      if (normalizedKey) {
+        setApiKey(normalizedKey)
+        setApiKeyInput(normalizedKey)
       }
     }
   }, [])
 
   const handleSaveApiKey = () => {
-    const trimmedKey = apiKeyInput.trim()
-    if (trimmedKey) {
-      localStorage.setItem("user_api_key", trimmedKey)
-      setApiKey(trimmedKey)
-      setApiKeyInput(trimmedKey)
+    const normalizedKey = normalizeApiKey(apiKeyInput)
+    if (normalizedKey) {
+      sessionStorage.setItem("user_api_key", normalizedKey)
+      setApiKey(normalizedKey)
+      setApiKeyInput(normalizedKey)
     } else {
-      localStorage.removeItem("user_api_key")
+      sessionStorage.removeItem("user_api_key")
       setApiKey("")
     }
   }
@@ -56,7 +58,7 @@ export default function WorkspacePage() {
   const handleClearApiKey = () => {
     setApiKey("")
     setApiKeyInput("")
-    localStorage.removeItem("user_api_key")
+    sessionStorage.removeItem("user_api_key")
   }
 
   const buildProxyHeaders = (projectId?: string) => {
@@ -576,7 +578,7 @@ export default function WorkspacePage() {
                 size="sm"
                 onClick={handleSaveApiKey}
                 aria-label="Save API key"
-                disabled={apiKeyInput.trim() === apiKey}
+                disabled={normalizeApiKey(apiKeyInput) === apiKey}
                 className="h-8 text-xs"
               >
                 Save
@@ -593,7 +595,7 @@ export default function WorkspacePage() {
               </Button>
             </div>
             <span className="text-xs text-muted-foreground">
-              Stored locally in your browser; avoid shared devices and be mindful of XSS risks.
+              Stored for this browser session; avoid shared devices and be mindful of XSS risks.
             </span>
             <div className="text-sm text-muted-foreground">
               {selectedIdea ? `Working on: ${selectedIdea.title}` : "No idea selected"}

@@ -31,7 +31,10 @@ def get_model(temperature: float = 0.1, model_name: str = None, provider: str = 
     if provider == "openai":
         effective_api_key = api_key or OPENAI_API_KEY
         if not effective_api_key:
-            raise ValueError("No API key provided. Set OPENAI_API_KEY or pass an api_key parameter.")
+            raise ValueError(
+                "No API key provided. Set OPENAI_API_KEY or pass an api_key parameter "
+                "(X-User-Api-Key header for API requests)."
+            )
         
         # Use provided base_url, or fall back to environment variable
         api_base = base_url or OPENAI_API_BASE
