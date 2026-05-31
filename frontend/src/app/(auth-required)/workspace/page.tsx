@@ -22,6 +22,7 @@ export default function WorkspacePage() {
   const [chatHistory, setChatHistory] = useState<any[]>([])
   const [workflowStep, setWorkflowStep] = useState<"input" | "classifying" | "clarifying" | "product" | "customer" | "risk" | "engineer" | "diagram" | "summary" | "review" | "next">("input")
   const [apiKey, setApiKey] = useState("")
+  const [apiKeyInput, setApiKeyInput] = useState("")
   const [showApiKey, setShowApiKey] = useState(false)
 
   useEffect(() => {
@@ -33,16 +34,26 @@ export default function WorkspacePage() {
     const storedKey = localStorage.getItem("user_api_key")
     if (storedKey) {
       setApiKey(storedKey)
+      setApiKeyInput(storedKey)
     }
   }, [])
 
-  useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem("user_api_key", apiKey)
+  const handleSaveApiKey = () => {
+    const trimmedKey = apiKeyInput.trim()
+    if (trimmedKey) {
+      localStorage.setItem("user_api_key", trimmedKey)
+      setApiKey(trimmedKey)
     } else {
       localStorage.removeItem("user_api_key")
+      setApiKey("")
     }
-  }, [apiKey])
+  }
+
+  const handleClearApiKey = () => {
+    setApiKey("")
+    setApiKeyInput("")
+    localStorage.removeItem("user_api_key")
+  }
 
   const buildProxyHeaders = (projectId?: string) => {
     const headers: Record<string, string> = {
@@ -535,12 +546,15 @@ export default function WorkspacePage() {
           <h1 className="text-xl font-semibold">Product Idea Workspace</h1>
           <div className="ml-auto flex items-center space-x-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">API Key</span>
+              <label htmlFor="user-api-key" className="text-xs text-muted-foreground">
+                API Key
+              </label>
               <Input
+                id="user-api-key"
                 type={showApiKey ? "text" : "password"}
                 placeholder="sk-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
                 className="h-8 w-56 text-xs"
               />
               <Button
@@ -554,13 +568,25 @@ export default function WorkspacePage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setApiKey("")}
-                disabled={!apiKey}
+                onClick={handleSaveApiKey}
+                disabled={apiKeyInput.trim() === apiKey}
+                className="h-8 text-xs"
+              >
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearApiKey}
+                disabled={!apiKeyInput && !apiKey}
                 className="h-8 text-xs"
               >
                 Clear
               </Button>
             </div>
+            <span className="text-[10px] text-muted-foreground">
+              Stored locally in your browser.
+            </span>
             <div className="text-sm text-muted-foreground">
               {selectedIdea ? `Working on: ${selectedIdea.title}` : "No idea selected"}
             </div>
