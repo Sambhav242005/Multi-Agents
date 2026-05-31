@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 import json
 import uuid
@@ -79,10 +79,10 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/clarify")
-async def clarify(request: ClarifierRequest):
+async def clarify(request: ClarifierRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Run Clarifier agent step"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         clarifier = get_clarifier_agent(model)
         
         # Convert dict messages to LangChain messages
@@ -118,10 +118,10 @@ async def clarify(request: ClarifierRequest):
         raise HTTPException(status_code=500, detail=f"Error in clarifier: {str(e)}")
 
 @app.post("/classify")
-async def classify(request: ClassifierRequest):
+async def classify(request: ClassifierRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Run Classifier agent step"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         classifier = get_classifier_agent(model)
         
         config = {"configurable": {"thread_id": str(uuid.uuid4())}}
@@ -145,10 +145,10 @@ async def classify(request: ClassifierRequest):
 from src.services.diagram.diagram import generate_mermaid_link
 
 @app.post("/generate_product")
-async def generate_product(request: ProductRequest):
+async def generate_product(request: ProductRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate product data from requirements"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         product_agent = get_product_agent(model)
         
         trigger_message = HumanMessage(content=f"Requirements: {request.requirements}\\n\\nBased on the above requirements, please generate the full product specification.")
@@ -168,7 +168,7 @@ async def generate_product(request: ProductRequest):
 
             # Generate diagram
             try:
-                diagram_url = generate_mermaid_link(product_obj.model_dump_json())
+                diagram_url = generate_mermaid_link(product_obj.model_dump_json(), api_key=x_user_api_key)
             except Exception as e:
                 print(f"Diagram generation failed: {e}")
                 diagram_url = None
@@ -186,10 +186,10 @@ async def generate_product(request: ProductRequest):
         raise HTTPException(status_code=500, detail=f"Error generating product: {str(e)}")
 
 @app.post("/generate_customer")
-async def generate_customer(request: CustomerRequest):
+async def generate_customer(request: CustomerRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate customer analysis from product data"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         customer_agent = get_customer_agent(model)
         
         product_str = toon.dumps(request.product_data)
@@ -219,10 +219,10 @@ async def generate_customer(request: CustomerRequest):
         raise HTTPException(status_code=500, detail=f"Error generating customer analysis: {str(e)}")
 
 @app.post("/generate_engineer")
-async def generate_engineer(request: EngineerRequest):
+async def generate_engineer(request: EngineerRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate engineer analysis from customer data"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         engineer_agent = get_engineer_agent(model)
         
         customer_str = toon.dumps(request.customer_data)
@@ -256,10 +256,10 @@ async def generate_engineer(request: EngineerRequest):
         raise HTTPException(status_code=500, detail=f"Error generating engineer analysis: {str(e)}")
 
 @app.post("/generate_risk")
-async def generate_risk(request: RiskRequest):
+async def generate_risk(request: RiskRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate risk assessment from engineer data"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         risk_agent = get_risk_agent(model)
         
         engineer_data = request.engineer_data
@@ -289,10 +289,10 @@ async def generate_risk(request: RiskRequest):
         raise HTTPException(status_code=500, detail=f"Error generating risk assessment: {str(e)}")
 
 @app.post("/generate_summary")
-async def generate_summary(request: SummaryRequest):
+async def generate_summary(request: SummaryRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate final summary from all data"""
     try:
-        model = get_model(provider=request.model_provider)
+        model = get_model(provider=request.model_provider, api_key=x_user_api_key)
         summarizer = get_summarizer_agent(model)
         
         config = {"configurable": {"thread_id": str(uuid.uuid4())}}
@@ -324,10 +324,10 @@ async def generate_summary(request: SummaryRequest):
         raise HTTPException(status_code=500, detail=f"Error generating summary: {str(e)}")
 
 @app.post("/generate_diagram")
-async def generate_diagram(request: DiagramRequest):
+async def generate_diagram(request: DiagramRequest, x_user_api_key: Optional[str] = Header(default=None, alias="X-User-Api-Key")):
     """Generate a Mermaid diagram from project summary"""
     try:
-        diagram_url = generate_mermaid_link(json.dumps(request.project_summary))
+        diagram_url = generate_mermaid_link(json.dumps(request.project_summary), api_key=x_user_api_key)
         return {
             "diagram_url": diagram_url,
             "status": "success"

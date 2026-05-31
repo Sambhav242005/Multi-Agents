@@ -29,12 +29,18 @@ export async function POST(req: NextRequest) {
 
         // 2. Trigger Agent
         const agentUrl = `${BACKEND_URL}/generate_product`;
+        const userApiKey = req.headers.get("X-User-Api-Key");
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            "X-Project-Id": project.id,
+        };
+        if (userApiKey) {
+            headers["X-User-Api-Key"] = userApiKey;
+        }
+
         const agentResponse = await fetch(agentUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Project-Id": project.id,
-            },
+            headers,
             body: JSON.stringify({ requirements: projectTitle }),
         });
 

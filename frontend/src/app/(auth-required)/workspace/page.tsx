@@ -4,6 +4,8 @@
 import { useState, useEffect } from "react"
 import { HistorySidebar, HistoryItem } from "@/components/history-sidebar"
 import { LiveWorkingArea } from "@/components/live-working-area"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export default function WorkspacePage() {
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -19,11 +21,58 @@ export default function WorkspacePage() {
   const [classification, setClassification] = useState<any>(null)
   const [chatHistory, setChatHistory] = useState<any[]>([])
   const [workflowStep, setWorkflowStep] = useState<"input" | "classifying" | "clarifying" | "product" | "customer" | "risk" | "engineer" | "diagram" | "summary" | "review" | "next">("input")
+  const [apiKey, setApiKey] = useState("")
+  const [apiKeyInput, setApiKeyInput] = useState("")
+  const [showApiKey, setShowApiKey] = useState(false)
+
+  const normalizeApiKey = (value: string) => value.trim()
 
   useEffect(() => {
     console.log("WorkspacePage mounted, fetching projects...")
     fetchProjects()
   }, [])
+
+  useEffect(() => {
+    const storedKey = sessionStorage.getItem("user_api_key")
+    if (storedKey) {
+      const normalizedKey = normalizeApiKey(storedKey)
+      if (normalizedKey) {
+        setApiKey(normalizedKey)
+        setApiKeyInput(normalizedKey)
+      }
+    }
+  }, [])
+
+  const handleSaveApiKey = () => {
+    const normalizedKey = normalizeApiKey(apiKeyInput)
+    if (normalizedKey) {
+      sessionStorage.setItem("user_api_key", normalizedKey)
+      setApiKey(normalizedKey)
+      setApiKeyInput(normalizedKey)
+    } else {
+      sessionStorage.removeItem("user_api_key")
+      setApiKey("")
+    }
+  }
+
+  const handleClearApiKey = () => {
+    setApiKey("")
+    setApiKeyInput("")
+    sessionStorage.removeItem("user_api_key")
+  }
+
+  const buildProxyHeaders = (projectId?: string) => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+    if (projectId) {
+      headers["X-Project-Id"] = projectId
+    }
+    if (apiKey) {
+      headers["X-User-Api-Key"] = apiKey
+    }
+    return headers
+  }
 
   const fetchProjects = async () => {
     try {
@@ -88,8 +137,7 @@ export default function WorkspacePage() {
       const classifyRes = await fetch("/api/proxy/classify", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "X-Project-Id": project.id,
+            ...buildProxyHeaders(project.id),
           },
           body: JSON.stringify({ idea: ideaTitle }),
       })
@@ -103,8 +151,7 @@ export default function WorkspacePage() {
       const clarifierRes = await fetch("/api/proxy/clarify", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "X-Project-Id": project.id,
+            ...buildProxyHeaders(project.id),
           },
           body: JSON.stringify({ 
               messages: [{ role: "user", content: `I have a new product idea: ${ideaTitle}. Please help me refine it.` }] 
@@ -245,7 +292,7 @@ export default function WorkspacePage() {
 
              const response = await fetch("/api/proxy/generate_product", {
                  method: "POST",
-                 headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                 headers: buildProxyHeaders(selectedIdea.id),
                  body: JSON.stringify({ requirements })
              })
              const data = await response.json()
@@ -259,7 +306,7 @@ export default function WorkspacePage() {
               
               const response = await fetch("/api/proxy/generate_customer", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ product_data: productData.product_data })
               })
               const data = await response.json()
@@ -273,7 +320,7 @@ export default function WorkspacePage() {
               // Passing customer data as engineer data for now to satisfy API
               const response = await fetch("/api/proxy/generate_risk", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ engineer_data: customerData.customer_data }) 
               })
               const data = await response.json()
@@ -286,7 +333,7 @@ export default function WorkspacePage() {
 
               const response = await fetch("/api/proxy/generate_engineer", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ customer_data: customerData.customer_data })
               })
               const data = await response.json()
@@ -299,7 +346,7 @@ export default function WorkspacePage() {
 
               const response = await fetch("/api/proxy/generate_diagram", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ 
                       project_summary: { ...productData?.product_data, ...engineerData?.engineer_data, title: selectedIdea.title }
                   })
@@ -316,7 +363,7 @@ export default function WorkspacePage() {
 
               const response = await fetch("/api/proxy/generate_summary", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ 
                       final_data: {
                           product_data: productData?.product_data,
@@ -364,10 +411,7 @@ export default function WorkspacePage() {
 
             const response = await fetch("/api/proxy/clarify", {
                 method: "POST",
-                headers: { 
-                  "Content-Type": "application/json",
-                  "X-Project-Id": selectedIdea.id
-                },
+                headers: buildProxyHeaders(selectedIdea.id),
                 body: JSON.stringify({ messages: sanitizedHistory })
             })
             const data = await response.json()
@@ -418,7 +462,7 @@ export default function WorkspacePage() {
 
              const response = await fetch("/api/proxy/generate_product", {
                  method: "POST",
-                 headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                 headers: buildProxyHeaders(selectedIdea.id),
                  body: JSON.stringify({ requirements })
              })
              const data = await response.json()
@@ -428,7 +472,7 @@ export default function WorkspacePage() {
           } else if (activeAgent === "customer") {
               const response = await fetch("/api/proxy/generate_customer", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ product_data: productData.product_data })
               })
               const data = await response.json()
@@ -438,7 +482,7 @@ export default function WorkspacePage() {
               // Passing customer data as engineer data for now to satisfy API
               const response = await fetch("/api/proxy/generate_risk", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ engineer_data: customerData.customer_data }) 
               })
               const data = await response.json()
@@ -447,7 +491,7 @@ export default function WorkspacePage() {
           } else if (activeAgent === "engineer") {
               const response = await fetch("/api/proxy/generate_engineer", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ customer_data: customerData.customer_data })
               })
               const data = await response.json()
@@ -456,7 +500,7 @@ export default function WorkspacePage() {
           } else if (activeAgent === "summary") {
               const response = await fetch("/api/proxy/generate_summary", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ 
                       final_data: {
                           product_data: productData?.product_data,
@@ -472,7 +516,7 @@ export default function WorkspacePage() {
           } else if (activeAgent === "diagram") {
               const response = await fetch("/api/proxy/generate_diagram", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", "X-Project-Id": selectedIdea.id },
+                  headers: buildProxyHeaders(selectedIdea.id),
                   body: JSON.stringify({ 
                       project_summary: productData?.product_data || summaryData || { title: selectedIdea.title }
                   })
@@ -507,6 +551,52 @@ export default function WorkspacePage() {
         <div className="h-16 border-b border-border/50 flex items-center px-6">
           <h1 className="text-xl font-semibold">Product Idea Workspace</h1>
           <div className="ml-auto flex items-center space-x-4">
+            <div className="flex items-center gap-2">
+              <label id="user-api-key-label" htmlFor="user-api-key" className="text-xs text-muted-foreground">
+                OpenAI API Key
+              </label>
+              <Input
+                id="user-api-key"
+                aria-labelledby="user-api-key-label"
+                type={showApiKey ? "text" : "password"}
+                placeholder="sk-..."
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                className="h-8 w-56 text-xs"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowApiKey((prev) => !prev)}
+                aria-label="Toggle API key visibility"
+                className="h-8 text-xs"
+              >
+                {showApiKey ? "Hide" : "Show"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveApiKey}
+                aria-label="Save API key"
+                disabled={normalizeApiKey(apiKeyInput) === apiKey}
+                className="h-8 text-xs"
+              >
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearApiKey}
+                aria-label="Clear API key"
+                disabled={!apiKeyInput && !apiKey}
+                className="h-8 text-xs"
+              >
+                Clear
+              </Button>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Stored for this browser session; avoid shared devices and be mindful of XSS risks.
+            </span>
             <div className="text-sm text-muted-foreground">
               {selectedIdea ? `Working on: ${selectedIdea.title}` : "No idea selected"}
             </div>
