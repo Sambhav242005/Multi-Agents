@@ -15,7 +15,7 @@ from src.config.env import (
     TTS_CONVERTER_MODEL
 )
 
-def get_model(temperature: float = 0.1, model_name: str = None, provider: str = "openai", base_url: str = None, agent_type: str = None):
+def get_model(temperature: float = 0.1, model_name: str = None, provider: str = "openai", base_url: str = None, agent_type: str = None, api_key: str = None):
     """
     Returns a configured Chat model instance based on provider.
     
@@ -28,7 +28,8 @@ def get_model(temperature: float = 0.1, model_name: str = None, provider: str = 
                    Used to select agent-specific model when USE_SINGLE_MODEL=false
     """
     if provider == "openai":
-        if not OPENAI_API_KEY:
+        effective_api_key = api_key or OPENAI_API_KEY
+        if not effective_api_key:
             raise ValueError("OPENAI_API_KEY not found in environment variables.")
         
         # Use provided base_url, or fall back to environment variable
@@ -61,7 +62,7 @@ def get_model(temperature: float = 0.1, model_name: str = None, provider: str = 
         
         return ChatOpenAI(
             model=selected_model,
-            api_key=OPENAI_API_KEY,
+            api_key=effective_api_key,
             base_url=api_base,
         )
     else:
@@ -72,4 +73,3 @@ try:
     default_model = get_model()
 except Exception:
     default_model = None
-

@@ -37,6 +37,11 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
             "Content-Type": "application/json",
         };
 
+        const userApiKey = req.headers.get("X-User-Api-Key");
+        if (userApiKey) {
+            headers["X-User-Api-Key"] = userApiKey;
+        }
+
         // Forward specific headers if needed, e.g., Authorization if backend needs it
         // headers['Authorization'] = req.headers.get('Authorization') || '';
 

@@ -40,12 +40,12 @@ def clean_mermaid_code(code: str) -> str:
     
     return '\n'.join(lines)
 
-def generate_mermaid_direct(summary: str, max_retries: int = 2) -> Optional[str]:
+def generate_mermaid_direct(summary: str, max_retries: int = 2, api_key: Optional[str] = None) -> Optional[str]:
     """
     Generate Mermaid diagram using direct structured prompt with examples.
     This is more reliable than ReAct agents.
     """
-    model = get_model()
+    model = get_model(api_key=api_key)
     
     prompt = f"""You are a Mermaid diagram expert. Generate a clear, well-structured Mermaid flowchart diagram from this project summary.
 
@@ -212,7 +212,7 @@ def generate_mermaid_from_toon(toon_data: Dict[str, Any]) -> Optional[str]:
     
     return None
 
-def generate_mermaid_link(summary: str) -> str:
+def generate_mermaid_link(summary: str, api_key: Optional[str] = None) -> str:
     """
     Generate a Mermaid diagram link from a project summary.
     Uses multiple approaches for reliability.
@@ -227,7 +227,7 @@ def generate_mermaid_link(summary: str) -> str:
     
     # Approach 1: Try direct structured generation (most reliable)
     print("Attempting direct generation...")
-    mermaid_code = generate_mermaid_direct(summary)
+    mermaid_code = generate_mermaid_direct(summary, api_key=api_key)
     
     # Approach 2: If direct fails, try TOON conversion
     if not mermaid_code:
