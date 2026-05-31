@@ -550,11 +550,12 @@ export default function WorkspacePage() {
           <h1 className="text-xl font-semibold">Product Idea Workspace</h1>
           <div className="ml-auto flex items-center space-x-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="user-api-key" className="text-xs text-muted-foreground">
+              <label id="user-api-key-label" htmlFor="user-api-key" className="text-xs text-muted-foreground">
                 OpenAI API Key
               </label>
               <Input
                 id="user-api-key"
+                aria-labelledby="user-api-key-label"
                 type={showApiKey ? "text" : "password"}
                 placeholder="sk-..."
                 value={apiKeyInput}
@@ -565,6 +566,7 @@ export default function WorkspacePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowApiKey((prev) => !prev)}
+                aria-label="Toggle API key visibility"
                 className="h-8 text-xs"
               >
                 {showApiKey ? "Hide" : "Show"}
@@ -573,6 +575,7 @@ export default function WorkspacePage() {
                 variant="outline"
                 size="sm"
                 onClick={handleSaveApiKey}
+                aria-label="Save API key"
                 disabled={apiKeyInput.trim() === apiKey}
                 className="h-8 text-xs"
               >
@@ -582,6 +585,7 @@ export default function WorkspacePage() {
                 variant="outline"
                 size="sm"
                 onClick={handleClearApiKey}
+                aria-label="Clear API key"
                 disabled={!apiKeyInput && !apiKey}
                 className="h-8 text-xs"
               >
