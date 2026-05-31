@@ -551,7 +551,7 @@ export default function WorkspacePage() {
           <div className="ml-auto flex items-center space-x-4">
             <div className="flex items-center gap-2">
               <label htmlFor="user-api-key" className="text-xs text-muted-foreground">
-                API Key
+                OpenAI API Key
               </label>
               <Input
                 id="user-api-key"
@@ -588,7 +588,7 @@ export default function WorkspacePage() {
                 Clear
               </Button>
             </div>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               Stored locally in your browser; avoid shared devices and be mindful of XSS risks.
             </span>
             <div className="text-sm text-muted-foreground">
