@@ -1,3 +1,4 @@
+from typing import Optional
 from langchain_openai import ChatOpenAI
 from src.config.env import (
     OPENAI_API_KEY, 
@@ -15,7 +16,7 @@ from src.config.env import (
     TTS_CONVERTER_MODEL
 )
 
-def get_model(temperature: float = 0.1, model_name: str = None, provider: str = "openai", base_url: str = None, agent_type: str = None, api_key: str = None):
+def get_model(temperature: float = 0.1, model_name: str = None, provider: str = "openai", base_url: str = None, agent_type: str = None, api_key: Optional[str] = None):
     """
     Returns a configured Chat model instance based on provider.
     

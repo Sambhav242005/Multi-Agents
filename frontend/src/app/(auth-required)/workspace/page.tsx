@@ -33,8 +33,11 @@ export default function WorkspacePage() {
   useEffect(() => {
     const storedKey = localStorage.getItem("user_api_key")
     if (storedKey) {
-      setApiKey(storedKey)
-      setApiKeyInput(storedKey)
+      const trimmedKey = storedKey.trim()
+      if (trimmedKey) {
+        setApiKey(trimmedKey)
+        setApiKeyInput(trimmedKey)
+      }
     }
   }, [])
 
@@ -43,6 +46,7 @@ export default function WorkspacePage() {
     if (trimmedKey) {
       localStorage.setItem("user_api_key", trimmedKey)
       setApiKey(trimmedKey)
+      setApiKeyInput(trimmedKey)
     } else {
       localStorage.removeItem("user_api_key")
       setApiKey("")
@@ -585,7 +589,7 @@ export default function WorkspacePage() {
               </Button>
             </div>
             <span className="text-[10px] text-muted-foreground">
-              Stored locally in your browser.
+              Stored locally in your browser; avoid shared devices and be mindful of XSS risks.
             </span>
             <div className="text-sm text-muted-foreground">
               {selectedIdea ? `Working on: ${selectedIdea.title}` : "No idea selected"}
